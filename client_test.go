@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-var VALID_API_KEY = "AIzaSyBYz30HngGWe3F7PrA6xK0yndJFzM_CKIg"
+var VALID_API_KEY = "API_KEY"
 
 func TestCreateClient(t *testing.T) {
 	client := CreateClient("api_key", GATEWAY)
