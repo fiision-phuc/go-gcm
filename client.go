@@ -36,15 +36,15 @@ func CreateClient(apiKey string, gateway string) *Client {
 	}
 }
 
-// SendMessages delivers push message to Google.
-func (m *Client) SendMessages(templateMessage *Message) []*Response {
+// SendMessage delivers push message to Google.
+func (m *Client) SendMessage(message *Message) []*Response {
 	/* Condition validation */
-	if templateMessage == nil {
+	if message == nil {
 		return nil
 	}
 
 	// Encode template message
-	messages := templateMessage.encode()
+	messages := message.encode()
 	responses := make([]*Response, len(messages))
 
 	for idx, message := range messages {
