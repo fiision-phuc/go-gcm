@@ -68,6 +68,9 @@ func (m *Message) encode() []*Message {
 		}
 		message := *m
 		message.RegistrationIDs = m.RegistrationIDs[strIdx:endIdx]
+		if m.DeviceIDs != nil {
+			message.DeviceIDs = m.DeviceIDs[strIdx:endIdx]
+		}
 
 		messages[i] = &message
 	}

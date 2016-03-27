@@ -30,11 +30,12 @@ type Response struct {
 
 // Result describes a result for individual message.
 type Result struct {
-	MessageID string `json:"message_id"`
-	Error     string `json:"error"`
+	DeviceID       string
+	RegistrationID string
 
-	RegistrationID    string `json:"-"`
-	NewRegistrationID string `json:"registration_id"`
+	MessageID         string `json:"message_id,omitempty"`
+	Error             string `json:"error,omitempty"`
+	NewRegistrationID string `json:"registration_id,omitempty"`
 }
 
 // ShouldPostpone validates if should not send a new message for a period of time.
