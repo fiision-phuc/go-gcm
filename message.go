@@ -3,7 +3,7 @@ package gcm
 // Message describes a gcm message.
 type Message struct {
 	RegistrationIDs []string `json:"registration_ids"`
-	DeviceIDs       []string `json:"_"`
+	DeviceIDs       []string `json:"-"`
 
 	CollapseKey       string `json:"collapse_key,omitempty"`
 	Priority          string `json:"priority,omitempty"`
@@ -68,6 +68,9 @@ func (m *Message) encode() []*Message {
 		}
 		message := *m
 		message.RegistrationIDs = m.RegistrationIDs[strIdx:endIdx]
+		if m.DeviceIDs != nil {
+			message.DeviceIDs = m.DeviceIDs[strIdx:endIdx]
+		}
 
 		messages[i] = &message
 	}
