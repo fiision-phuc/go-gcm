@@ -1,115 +1,157 @@
 package gcm
 
-// import (
-// 	"fmt"
-// 	"testing"
-// )
+import (
+	"fmt"
+	"testing"
+)
 
-// var VALID_API_KEY = "API_KEY"
+// var apiKey = "API_KEY"
+var apiKey = "AIzaSyBlsxfKNJCjGK1XSiI19K41X7dMlSeIuzU"
 
-// func TestCreateClient(t *testing.T) {
-// 	client := CreateClient("api_key", GATEWAY)
+func TestCreateClient(t *testing.T) {
+	client := CreateClient("api_key", Gateway)
 
-// 	if client.ApiKey != "api_key" {
-// 		t.Errorf("Expect 'api_key' but found %s", client.ApiKey)
-// 	}
-// 	if client.HttpClient == nil {
-// 		t.Errorf("Expect not nil but found nil")
-// 	}
-// }
+	if client.APIKey != "api_key" {
+		t.Errorf("Expected \"api_key\" but found \"%s\".", client.APIKey)
+	}
+	if client.HTTPClient == nil {
+		t.Errorf("Expected not nil but found nil.")
+	}
+}
 
-// func TestSendWithInvalidGateway(t *testing.T) {
-// 	message := CreateMessage([]string{"1", "2"})
-// 	message.DryRun = true
+func TestSendMessage(t *testing.T) {
+	message := CreateMessage([]string{"1", "2"}, []string{"3", "4"})
+	message.DryRun = true
 
-// 	client := CreateClient("api_key", "http://localhost:8080")
-// 	response := client.send(message)
+	// [Test 1] send with invalid api key
+	client := CreateClient("api_key", Gateway)
+	responses := client.SendMessage(message)
 
-// 	if response == nil {
-// 		t.Errorf("Expect not nil but found nil")
-// 	} else {
-// 		if len(response.Results[0].Error) == 0 {
-// 			t.Errorf("Expect not nil but found nil")
-// 		}
+	if responses == nil || len(responses) == 0 {
+		t.Errorf("Expected not nil but found nil.")
+	} else {
+		if len(responses[0].Results[0].Error) == 0 {
+			t.Errorf("Expected not nil but found nil.")
+		}
+		if !(responses[0].Results[0].Error == AuthenticationError || responses[0].Results[0].Error == Timeout) {
+			t.Errorf("Expected \"%s\" or \"%s\" but found \"%s\".", AuthenticationError, Timeout, responses[0].Results[0].Error)
+		}
 
-// 		if response.Results[0].RegistrationId != message.RegistrationIds[0] {
-// 			t.Errorf("Expect %s but found %s", message.RegistrationIds[0], response.Results[0].RegistrationId)
-// 		}
-// 	}
-// }
+		if responses[0].Results[0].DeviceID != message.DeviceIDs[0] {
+			t.Errorf("Expect \"%s\" but found \"%s\".", message.DeviceIDs[0], responses[0].Results[0].DeviceID)
+		}
+		if responses[0].Results[0].RegistrationID != message.RegistrationIDs[0] {
+			t.Errorf("Expect \"%s\" but found \"%s\".", message.RegistrationIDs[0], responses[0].Results[0].RegistrationID)
+		}
+	}
 
-// func TestSendWithInvalidApiKey(t *testing.T) {
-// 	message := CreateMessage([]string{"1", "2"})
-// 	message.DryRun = true
+	// [Test 2] send with invalid gateway
+	client = CreateClient("api_key", "example.com")
+	responses = client.SendMessage(message)
 
-// 	client := CreateClient("api_key", GATEWAY)
-// 	response := client.send(message)
+	if responses == nil || len(responses) == 0 {
+		t.Errorf("Expected not nil but found nil.")
+	} else {
+		if responses[0].MulticastID != -1 {
+			t.Errorf("Expected %d but found %d.", -1, responses[0].MulticastID)
+		}
+		if responses[0].Success != 0 {
+			t.Errorf("Expected %d but found %d.", 0, responses[0].Success)
+		}
+		if responses[0].Failure != 2 {
+			t.Errorf("Expected %d but found %d.", 2, responses[0].Failure)
+		}
 
-// 	if response == nil {
-// 		t.Errorf("Expect not nil but found nil")
-// 	} else {
-// 		if !(response.Results[0].Error == AUTHENTICATION_ERROR || response.Results[0].Error == TIMEOUT) {
-// 			t.Errorf("Expect %s or %s but found %s", AUTHENTICATION_ERROR, TIMEOUT, response.Results[0].Error)
-// 		}
-// 	}
-// }
+		if len(responses[0].Results[0].Error) == 0 {
+			t.Errorf("Expected not nil but found nil.")
+		}
+		if responses[0].Results[0].Error != Timeout {
+			t.Errorf("Expected \"%s\" or \"%s\" but found \"%s\".", AuthenticationError, Timeout, responses[0].Results[0].Error)
+		}
 
-// func TestSendWithInvalidRegistrationId(t *testing.T) {
-// 	message := CreateMessage([]string{"1"})
-// 	message.DryRun = true
+		if responses[0].Results[0].DeviceID != message.DeviceIDs[0] {
+			t.Errorf("Expect \"%s\" but found \"%s\".", message.DeviceIDs[0], responses[0].Results[0].DeviceID)
+		}
+		if responses[0].Results[0].RegistrationID != message.RegistrationIDs[0] {
+			t.Errorf("Expect \"%s\" but found \"%s\".", message.RegistrationIDs[0], responses[0].Results[0].RegistrationID)
+		}
+	}
 
-// 	client := CreateClient(VALID_API_KEY, GATEWAY)
-// 	response := client.send(message)
+	// [Test 3] send with invalid registrationID
+	client = CreateClient(apiKey, Gateway)
+	responses = client.SendMessage(message)
 
-// 	if response == nil {
-// 		t.Errorf("Expect not nil but found nil")
-// 	} else {
-// 		if response.Results[0].RegistrationId != message.RegistrationIds[0] {
-// 			t.Errorf("Expect %s but found %s", message.RegistrationIds[0], response.Results[0].RegistrationId)
-// 		}
+	if responses == nil || len(responses) == 0 {
+		t.Errorf("Expected not nil but found nil")
+	} else {
+		if responses[0].Results[0].DeviceID != message.DeviceIDs[0] {
+			t.Errorf("Expect \"%s\" but found \"%s\".", message.DeviceIDs[0], responses[0].Results[0].DeviceID)
+		}
+		if responses[0].Results[0].RegistrationID != message.RegistrationIDs[0] {
+			t.Errorf("Expected \"%s\" but found \"%s\".", message.RegistrationIDs[0], responses[0].Results[0].RegistrationID)
+		}
+		if responses[0].Results[0].Error != InvalidRegistrationToken {
+			t.Errorf("Expected \"%s\" but found \"%s\".", InvalidRegistrationToken, responses[0].Results[0].Error)
+		}
+	}
 
-// 		if response.Results[0].Error != INVALID_REGISTRATION_TOKEN {
-// 			t.Errorf("Expect %s but found %s", INVALID_REGISTRATION_TOKEN, response.Results[0].Error)
-// 		}
-// 	}
-// }
+	// [Test 4] send nil message
+	client = CreateClient(apiKey, Gateway)
+	responses = client.SendMessage(nil)
 
-// func TestSend1000(t *testing.T) {
-// 	registrationIds := make([]string, 1000)
-// 	for i := 0; i < 1000; i++ {
-// 		registrationIds[i] = fmt.Sprintf("%d %d %d %d %d %d %d %d %d %d", i, i, i, i, i, i, i, i, i, i)
-// 	}
-// 	originalMessage := CreateMessage(registrationIds)
-// 	originalMessage.DryRun = true
+	if responses != nil || len(responses) != 0 {
+		t.Errorf("Expected nil but found not nil.")
+	}
 
-// 	client := CreateClient(VALID_API_KEY, GATEWAY)
-// 	response := client.send(originalMessage)
+	// [Test 5] send 1000 messages
+	registrationIDs := make([]string, 1000)
+	deviceIDs := make([]string, 1000)
+	for i := 0; i < 1000; i++ {
+		registrationIDs[i] = fmt.Sprintf("%d %d %d %d %d %d %d %d %d %d", i, i, i, i, i, i, i, i, i, i)
+		deviceIDs[i] = fmt.Sprintf("%d %d %d %d %d %d %d %d %d %d", i, i, i, i, i, i, i, i, i, i)
+	}
+	message.RegistrationIDs = registrationIDs
+	message.DeviceIDs = deviceIDs
+	message.DryRun = true
 
-// 	if len(response.Results) != len(registrationIds) {
-// 		t.Errorf("Expect %d but found %d", len(registrationIds), len(response.Results))
-// 	}
-// }
+	client = CreateClient(apiKey, Gateway)
+	responses = client.SendMessage(message)
 
-// func TestSendMessage(t *testing.T) {
-// 	registrationIds := make([]string, 1001)
-// 	for i := 0; i < 1001; i++ {
-// 		registrationIds[i] = fmt.Sprintf("%d %d %d %d %d %d %d %d %d %d", i, i, i, i, i, i, i, i, i, i)
-// 	}
-// 	originalMessage := CreateMessage(registrationIds)
-// 	originalMessage.DryRun = true
+	if len(responses) != 1 {
+		t.Errorf("Expect %d but found %d", 1, len(responses))
+	}
+	if len(responses[0].Results) != 1000 {
+		t.Errorf("Expect %d but found %d", 1000, len(responses[0].Results))
+	}
 
-// 	client := CreateClient(VALID_API_KEY, GATEWAY)
-// 	responses := client.SendMessage(originalMessage)
+	// [Test 6] send 1001 messages
+	registrationIDs = make([]string, 1001)
+	deviceIDs = make([]string, 1001)
+	for i := 0; i < 1001; i++ {
+		registrationIDs[i] = fmt.Sprintf("%d %d %d %d %d %d %d %d %d %d", i, i, i, i, i, i, i, i, i, i)
+		deviceIDs[i] = fmt.Sprintf("%d %d %d %d %d %d %d %d %d %d", i, i, i, i, i, i, i, i, i, i)
+	}
+	message.RegistrationIDs = registrationIDs
+	message.DeviceIDs = deviceIDs
+	message.DryRun = true
 
-// 	if len(responses) != 2 {
-// 		t.Errorf("Expect 2 but found %d", len(responses))
-// 	}
+	client = CreateClient(apiKey, Gateway)
+	responses = client.SendMessage(message)
 
-// 	if len(responses[0].Results) != 1000 {
-// 		t.Errorf("Expect 1000 but found %d", len(responses[0].Results))
-// 	}
+	if len(responses) != 2 {
+		t.Errorf("Expect %d but found %d", 2, len(responses))
+	}
+	if len(responses[0].Results) != 1000 {
+		t.Errorf("Expect %d but found %d", 1000, len(responses[0].Results))
+	}
+	if len(responses[1].Results) != 1 {
+		t.Errorf("Expect %d but found %d", 1, len(responses[1].Results))
+	}
 
-// 	if len(responses[1].Results) != 1 {
-// 		t.Errorf("Expect 1 but found %d", len(responses[1].Results))
-// 	}
-// }
+	if responses[1].Results[0].DeviceID != message.DeviceIDs[1000] {
+		t.Errorf("Expect \"%s\" but found \"%s\".", message.DeviceIDs[1000], responses[1].Results[0].DeviceID)
+	}
+	if responses[1].Results[0].RegistrationID != message.RegistrationIDs[1000] {
+		t.Errorf("Expected \"%s\" but found \"%s\".", message.RegistrationIDs[1000], responses[1].Results[0].RegistrationID)
+	}
+}
